@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { Search, Save, Edit2, Plus, Calendar, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Search, Save, Edit2, Plus, Calendar, Trash2, ShoppingCart } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
@@ -36,6 +36,12 @@ export default function InventoryPage() {
   });
 
   const [categoryFilter, setCategoryFilter] = useState("All");
+
+  // Reorder State
+  const [isReorderDialogOpen, setIsReorderDialogOpen] = useState(false);
+  const [reorderItem, setReorderItem] = useState<{ id: string, name: string } | null>(null);
+  const [reorderQuantity, setReorderQuantity] = useState("50");
+  const reorderProductStore = useStore(state => state.reorderProduct);
 
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -132,6 +138,25 @@ export default function InventoryPage() {
   const handleReceiveOrder = (id: string, qty: number, name: string) => {
     receiveOrder(id);
     toast.success(`Received ${qty} units of ${name}. Stock updated.`);
+  };
+
+  const handleOpenReorder = (id: string, name: string) => {
+    setReorderItem({ id, name });
+    setReorderQuantity("50");
+    setIsReorderDialogOpen(true);
+  };
+
+  const handleApplyReorder = () => {
+    if (!reorderItem) return;
+    const quantity = parseInt(reorderQuantity, 10);
+    if (isNaN(quantity) || quantity <= 0) {
+      toast.error("Please enter a valid quantity.");
+      return;
+    }
+    
+    reorderProductStore(reorderItem.id, quantity);
+    toast.success(`Successfully reordered ${quantity} units of ${reorderItem.name}`);
+    setIsReorderDialogOpen(false);
   };
 
   return (
@@ -408,6 +433,38 @@ export default function InventoryPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Reorder Dialog */}
+      <Dialog open={isReorderDialogOpen} onOpenChange={setIsReorderDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Place Reorder</DialogTitle>
+            <DialogDescription>
+              Specify the quantity to reorder for {reorderItem?.name}. This item will be tracked in Live Inventory until received.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="reorder-quantity" className="text-right">
+                Quantity
+              </Label>
+              <div className="col-span-3">
+                <Input
+                  id="reorder-quantity"
+                  type="number"
+                  min="1"
+                  value={reorderQuantity}
+                  onChange={(e) => setReorderQuantity(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReorderDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleApplyReorder}>Place Order</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <BentoCard>
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
           <div className="relative flex-1 w-full sm:max-w-sm">
@@ -500,7 +557,10 @@ export default function InventoryPage() {
                             Receive
                           </Button>
                         ) : null}
-                        <Button size="sm" variant="ghost" onClick={() => handleEdit(item)}>
+                        <Button size="sm" variant="ghost" onClick={() => handleOpenReorder(item.id, item.name)} title="Reorder">
+                          <ShoppingCart className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(item)} title="Edit">
                           <Edit2 className="h-4 w-4" />
                         </Button>
                         <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>
