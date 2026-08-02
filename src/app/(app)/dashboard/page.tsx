@@ -23,6 +23,11 @@ export default function DashboardPage() {
   const [isDiscountDialogOpen, setIsDiscountDialogOpen] = useState(false);
   const [discountItem, setDiscountItem] = useState<{ id: string, name: string, price: number } | null>(null);
   const [discountPercent, setDiscountPercent] = useState("10");
+
+  const [isReorderDialogOpen, setIsReorderDialogOpen] = useState(false);
+  const [reorderItem, setReorderItem] = useState<{ id: string, name: string } | null>(null);
+  const [reorderQuantity, setReorderQuantity] = useState("50");
+  const reorderProductStore = useStore(state => state.reorderProduct);
   
   // Existing Metrics
   const totalValue = inventory.reduce((acc, item) => acc + item.value, 0);
@@ -41,7 +46,7 @@ export default function DashboardPage() {
   // Stable derived lists
   const topSelling = [...inventory].sort((a, b) => b.value - a.value).slice(0, 3);
   const overstocked = [...inventory].sort((a, b) => b.stock - a.stock).slice(0, 3);
-  const recommendedOrders = inventory.filter(i => i.status === 'Low' || i.status === 'Out of Stock').slice(0, 3);
+  const recommendedOrders = inventory.filter(i => (i.status === 'Low' || i.status === 'Out of Stock') && !i.orderedQuantity).slice(0, 3);
 
   // Dummy data for sparkline
   const accuracyData = [
@@ -72,6 +77,25 @@ export default function DashboardPage() {
     applyDiscountStore(discountItem.id, percent);
     toast.success(`Applied ${percent}% discount to ${discountItem.name}`);
     setIsDiscountDialogOpen(false);
+  };
+
+  const handleOpenReorder = (id: string, name: string) => {
+    setReorderItem({ id, name });
+    setReorderQuantity("50");
+    setIsReorderDialogOpen(true);
+  };
+
+  const handleApplyReorder = () => {
+    if (!reorderItem) return;
+    const quantity = parseInt(reorderQuantity, 10);
+    if (isNaN(quantity) || quantity <= 0) {
+      toast.error("Please enter a valid quantity.");
+      return;
+    }
+    
+    reorderProductStore(reorderItem.id, quantity);
+    toast.success(`Successfully reordered ${quantity} units of ${reorderItem.name}`);
+    setIsReorderDialogOpen(false);
   };
 
   useEffect(() => {
@@ -209,7 +233,7 @@ export default function DashboardPage() {
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Vendor: {item.vendor || 'Unknown'}</p>
                 </div>
-                <Button size="sm" onClick={() => handleAction(`Reorder placed for ${item.name}`)}>
+                <Button size="sm" onClick={() => handleOpenReorder(item.id, item.name)}>
                   Reorder
                 </Button>
               </div>
@@ -303,6 +327,37 @@ export default function DashboardPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDiscountDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleApplyDiscount}>Apply Discount</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isReorderDialogOpen} onOpenChange={setIsReorderDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Place Reorder</DialogTitle>
+            <DialogDescription>
+              Specify the quantity to reorder for {reorderItem?.name}. This item will be tracked in Live Inventory until received.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="quantity" className="text-right">
+                Quantity
+              </Label>
+              <div className="col-span-3">
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  value={reorderQuantity}
+                  onChange={(e) => setReorderQuantity(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReorderDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleApplyReorder}>Place Order</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

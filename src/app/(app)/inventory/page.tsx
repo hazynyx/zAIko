@@ -18,6 +18,7 @@ export default function InventoryPage() {
   const addProduct = useStore(state => state.addProduct);
   const updateProduct = useStore(state => state.updateProduct);
   const deleteProduct = useStore(state => state.deleteProduct);
+  const receiveOrder = useStore(state => state.receiveOrder);
   const [search, setSearch] = useState("");
   
   // Add Product State
@@ -126,6 +127,11 @@ export default function InventoryPage() {
       deleteProduct(id);
       toast.success("Product deleted successfully!");
     }
+  };
+
+  const handleReceiveOrder = (id: string, qty: number, name: string) => {
+    receiveOrder(id);
+    toast.success(`Received ${qty} units of ${name}. Stock updated.`);
   };
 
   return (
@@ -461,12 +467,19 @@ export default function InventoryPage() {
                     <TableCell className="text-xs">{item.warehouseLocation}</TableCell>
                     <TableCell>{item.category}</TableCell>
                     <TableCell>
-                      <Badge variant={
-                        item.status === 'In Stock' ? 'default' : 
-                        item.status === 'Low' ? 'secondary' : 'destructive'
-                      }>
-                        {item.status}
-                      </Badge>
+                      <div className="flex flex-col gap-1 items-start">
+                        <Badge variant={
+                          item.status === 'In Stock' ? 'default' : 
+                          item.status === 'Low' ? 'secondary' : 'destructive'
+                        }>
+                          {item.status}
+                        </Badge>
+                        {item.orderedQuantity ? (
+                          <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-500/30 bg-amber-500/10">
+                            + {item.orderedQuantity} Ordered
+                          </Badge>
+                        ) : null}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground">{formatCurrency(item.costPrice)}</TableCell>
                     <TableCell className="text-right">
@@ -482,6 +495,11 @@ export default function InventoryPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        {item.orderedQuantity ? (
+                          <Button size="sm" variant="outline" className="text-xs h-8 text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={() => handleReceiveOrder(item.id, item.orderedQuantity!, item.name)}>
+                            Receive
+                          </Button>
+                        ) : null}
                         <Button size="sm" variant="ghost" onClick={() => handleEdit(item)}>
                           <Edit2 className="h-4 w-4" />
                         </Button>

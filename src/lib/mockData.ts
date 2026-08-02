@@ -14,6 +14,7 @@ export interface InventoryItem {
   warehouseLocation: string;
   estimatedExpiry: string;
   vendor: string;
+  orderedQuantity?: number;
 }
 
 export interface TimeSeriesPoint {

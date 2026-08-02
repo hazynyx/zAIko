@@ -43,16 +43,17 @@ export default function AnalyticsPage() {
         <p className="text-muted-foreground">Category performance, seasonality, and model metrics.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Error Rates */}
-        <BentoCard className="col-span-1 lg:col-span-3 bg-slate-900 text-white dark:bg-slate-50 dark:text-slate-900 flex flex-col justify-center items-center py-8">
-          <div className="flex w-full justify-around text-center">
+        <BentoCard className="col-span-1 lg:col-span-3 bg-slate-900 text-white dark:bg-slate-50 dark:text-slate-900">
+          <div className="flex flex-col md:flex-row w-full justify-around items-center text-center gap-8 py-6">
             <div>
               <p className="text-sm opacity-80 mb-2 uppercase tracking-wider font-semibold">Mean Absolute Error (MAE)</p>
               <p className="text-5xl font-bold font-mono">12.4</p>
               <p className="text-sm mt-2 text-green-400 dark:text-green-600">↓ 1.2 from last week</p>
             </div>
-            <div className="w-px bg-white/20 dark:bg-black/20" />
+            <div className="hidden md:block w-px h-24 bg-white/20 dark:bg-black/20" />
+            <div className="md:hidden h-px w-full max-w-[200px] bg-white/20 dark:bg-black/20" />
             <div>
               <p className="text-sm opacity-80 mb-2 uppercase tracking-wider font-semibold">Root Mean Square Error (RMSE)</p>
               <p className="text-5xl font-bold font-mono">15.8</p>
@@ -62,8 +63,8 @@ export default function AnalyticsPage() {
         </BentoCard>
 
         {/* Seasonality Trends */}
-        <BentoCard title="Seasonality Trends" description="Historical sales volume by month" className="col-span-1 md:col-span-2 lg:col-span-2 h-[400px]">
-          <div className="w-full h-[300px] mt-4">
+        <BentoCard title="Seasonality Trends" description="Historical sales volume by month" className="col-span-1 lg:col-span-2">
+          <div className="w-full h-[300px] sm:h-[350px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={seasonalityData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -80,12 +81,12 @@ export default function AnalyticsPage() {
         </BentoCard>
 
         {/* Category Performance Radar */}
-        <BentoCard title="Category Performance" description="Current vs Target" className="col-span-1 lg:col-span-1 h-[400px]">
-          <div className="w-full h-[300px]">
+        <BentoCard title="Category Performance" description="Current vs Target" className="col-span-1 lg:col-span-1">
+          <div className="w-full h-[300px] sm:h-[350px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={categoryData}>
+              <RadarChart cx="50%" cy="50%" outerRadius="65%" data={categoryData}>
                 <PolarGrid />
-                <PolarAngleAxis dataKey="subject" fontSize={12} />
+                <PolarAngleAxis dataKey="subject" fontSize={11} />
                 <PolarRadiusAxis angle={30} domain={[0, 150]} tick={false} />
                 <Radar name="Actual" dataKey="A" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.5} />
                 <Radar name="Target" dataKey="B" stroke="var(--muted-foreground)" fill="var(--muted-foreground)" fillOpacity={0.3} />
