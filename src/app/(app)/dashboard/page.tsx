@@ -57,17 +57,73 @@ export default function DashboardPage() {
   const outCount = inventory.filter(i => i.status === 'Out of Stock').length;
   const healthPercentage = inventory.length > 0 ? Math.round((healthyCount / inventory.length) * 100) : 0;
 
-  // Stable derived lists
-  const topSelling = [...inventory].sort((a, b) => b.value - a.value).slice(0, 3);
+  // Dynamically calculate Top Selling Products based on sales transactions
+  const salesMap = new Map<string, number>();
+  transactions.forEach(tx => {
+    if (tx.type === 'sale') {
+      let q = tx.quantity;
+      let id = tx.itemId;
+      
+      // Fallback for older transactions before we added explicit fields
+      if (!id || !q) {
+        const match = tx.message.match(/Sold (\d+) units of (.+)/);
+        if (match) {
+          q = parseInt(match[1], 10);
+          const name = match[2];
+          const item = inventory.find(i => i.name === name);
+          if (item) id = item.id;
+        }
+      }
+
+      if (id && q) {
+        salesMap.set(id, (salesMap.get(id) || 0) + q);
+      }
+    }
+  });
+
+  const topSellingItems = Array.from(salesMap.entries())
+    .sort((a, b) => b[1] - a[1]) // sort by quantity sold descending
+    .map(([itemId, quantitySold]) => {
+      const item = inventory.find(i => i.id === itemId);
+      return {
+        id: itemId,
+        name: item?.name || 'Unknown Product',
+        category: item?.category || 'Unknown',
+        price: item?.price || 0,
+        quantitySold
+      };
+    })
+    .slice(0, 3);
+
+  let topSelling = [...topSellingItems];
+  if (topSelling.length < 3) {
+    const existingIds = new Set(topSelling.map(i => i.id));
+    const padItems = [...inventory]
+      .filter(i => !existingIds.has(i.id))
+      .sort((a, b) => b.value - a.value);
+      
+    for (const pad of padItems) {
+      if (topSelling.length >= 3) break;
+      topSelling.push({
+        id: pad.id,
+        name: pad.name,
+        category: pad.category,
+        price: pad.price,
+        quantitySold: 0
+      });
+    }
+  }
+
   const overstocked = [...inventory].sort((a, b) => b.stock - a.stock).slice(0, 3);
   const recommendedOrders = inventory.filter(i => (i.status === 'Low' || i.status === 'Out of Stock') && !i.orderedQuantity).slice(0, 3);
 
   // Dynamic ML Accuracy Calculation based on historical forecasts vs actuals
   const historicalData = timeSeriesData.filter(d => d.actual !== null);
+  const recentHistoricalData = historicalData.slice(-7);
   
   let totalErrorPercentage = 0;
   let errorCount = 0;
-  historicalData.forEach(d => {
+  recentHistoricalData.forEach(d => {
     if (d.actual && d.actual > 0) {
       const error = Math.abs(d.actual - d.predicted);
       totalErrorPercentage += (error / d.actual);
@@ -79,7 +135,7 @@ export default function DashboardPage() {
   const mlAccuracy = Math.max(0, 100 - (averageError * 100)).toFixed(1);
 
   // Take the last 7 days for the sparkline chart
-  const recentHistorical = historicalData.slice(-7).map((d) => {
+  const recentHistorical = recentHistoricalData.map((d) => {
     const accuracy = d.actual && d.actual > 0 
       ? Math.max(0, 100 - (Math.abs(d.actual - d.predicted) / d.actual * 100))
       : 100;
@@ -282,7 +338,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-sm">{formatCurrency(item.price)}</p>
-                  <p className="text-xs text-emerald-500">Fast Mover</p>
+                  <p className="text-xs text-emerald-500">{item.quantitySold > 0 ? `${item.quantitySold} Sold Today` : 'Fast Mover'}</p>
                 </div>
               </div>
             ))}

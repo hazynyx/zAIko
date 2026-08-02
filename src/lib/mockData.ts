@@ -45,6 +45,8 @@ export interface Transaction {
   message: string;
   timestamp: string;
   amount?: number; // monetary impact if applicable
+  itemId?: string;
+  quantity?: number;
 }
 
 export const mockInventory: InventoryItem[] = [
@@ -91,6 +93,6 @@ export const mockAlerts: Alert[] = [
 ];
 
 export const mockTransactions: Transaction[] = [
-  { id: 'TXN-1', type: 'sale', message: 'Sold 5 units of Maggi 2-Min Noodles', timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), amount: 70 },
-  { id: 'TXN-2', type: 'reorder', message: 'Placed reorder for 50 units of Amul Taaza Milk', timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString() },
+  { id: 'TXN-1', type: 'sale', message: 'Sold 5 units of Maggi 2-Min Noodles', timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), amount: 70, itemId: 'SKU-9921', quantity: 5 },
+  { id: 'TXN-2', type: 'reorder', message: 'Placed reorder for 50 units of Amul Taaza Milk', timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(), itemId: 'SKU-1002', quantity: 50 },
 ];

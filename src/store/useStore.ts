@@ -144,9 +144,28 @@ export const useStore = create<AppState>()(
           type: 'sale',
           message: `Sold ${quantity} units of ${soldItemName}`,
           timestamp: new Date().toISOString(),
-          amount: revenue
+          amount: revenue,
+          itemId: id,
+          quantity: quantity
         };
-        return { inventory, alerts: syncAlerts(state.alerts, inventory), transactions: [newTx, ...state.transactions] };
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const timeSeriesData = state.timeSeriesData.map(pt => {
+          if (pt.date === todayStr) {
+            return {
+              ...pt,
+              actual: (pt.actual || 0) + quantity
+            };
+          }
+          return pt;
+        });
+
+        return { 
+          inventory, 
+          alerts: syncAlerts(state.alerts, inventory), 
+          transactions: [newTx, ...state.transactions],
+          timeSeriesData
+        };
       }),
       reorderProduct: (id, quantity) => set((state) => {
         let itemName = '';
@@ -161,7 +180,9 @@ export const useStore = create<AppState>()(
           id: `TXN-${Date.now()}`,
           type: 'reorder',
           message: `Placed reorder for ${quantity} units of ${itemName}`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          itemId: id,
+          quantity: quantity
         };
         return { inventory, alerts: syncAlerts(state.alerts, inventory), transactions: [newTx, ...state.transactions] };
       }),
@@ -194,7 +215,9 @@ export const useStore = create<AppState>()(
           id: `TXN-${Date.now()}`,
           type: 'receive',
           message: `Received shipment of ${receivedQty} units of ${itemName}`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          itemId: id,
+          quantity: receivedQty
         };
         return { inventory, alerts: syncAlerts(state.alerts, inventory), transactions: [newTx, ...state.transactions] };
       }),
