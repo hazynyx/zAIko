@@ -9,8 +9,10 @@ import { AlertCircle, ArrowUpRight, BarChart3, Download, Play } from "lucide-rea
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 export default function DashboardPage() {
+  const [mounted, setMounted] = useState(false);
   const inventory = useStore(state => state.inventory);
   const alerts = useStore(state => state.alerts);
   
@@ -35,6 +37,12 @@ export default function DashboardPage() {
   const handleOptimize = () => {
     toast.success("AI Optimization routine started");
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-6">

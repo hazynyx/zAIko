@@ -33,7 +33,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="currency">Default Currency</Label>
-              <Input id="currency" defaultValue="USD" disabled />
+              <Input id="currency" defaultValue="INR" disabled />
             </div>
           </div>
         </BentoCard>

@@ -5,8 +5,10 @@ import { BentoCard } from "@/components/ui/bento-card";
 import { Slider } from "@/components/ui/slider";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Label } from "@/components/ui/label";
+import { useEffect, useState } from "react";
 
 export default function SimulatorPage() {
+  const [mounted, setMounted] = useState(false);
   const timeSeriesData = useStore(state => state.timeSeriesData);
   const simulatorParams = useStore(state => state.simulatorParams);
   const updateSimulatorParam = useStore(state => state.updateSimulatorParam);
@@ -30,6 +32,12 @@ export default function SimulatorPage() {
     };
   });
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <div className="space-y-6">
       <div>
@@ -43,7 +51,7 @@ export default function SimulatorPage() {
             <div className="space-y-4">
               <div className="flex justify-between">
                 <Label>Marketing Spend</Label>
-                <span className="text-sm text-muted-foreground">${simulatorParams.marketingSpend}</span>
+                <span className="text-sm text-muted-foreground">₹{simulatorParams.marketingSpend}</span>
               </div>
               <Slider 
                 value={[simulatorParams.marketingSpend]} 

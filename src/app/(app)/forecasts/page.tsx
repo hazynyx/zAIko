@@ -3,10 +3,11 @@
 import { useStore } from "@/store/useStore";
 import { BentoCard } from "@/components/ui/bento-card";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function ForecastsPage() {
+  const [mounted, setMounted] = useState(false);
   const timeSeriesData = useStore(state => state.timeSeriesData);
   const [range, setRange] = useState(30);
 
@@ -14,6 +15,12 @@ export default function ForecastsPage() {
   // Assuming the middle of mock data is 'today' for demo purposes
   const middleIndex = Math.floor(timeSeriesData.length / 2);
   const displayData = timeSeriesData.slice(middleIndex - range, middleIndex + range);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-6">

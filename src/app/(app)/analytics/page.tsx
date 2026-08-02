@@ -2,8 +2,10 @@
 
 import { BentoCard } from "@/components/ui/bento-card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
+import { useState, useEffect } from "react";
 
 export default function AnalyticsPage() {
+  const [mounted, setMounted] = useState(false);
   const categoryData = [
     { subject: 'Apparel', A: 120, B: 110, fullMark: 150 },
     { subject: 'Footwear', A: 98, B: 130, fullMark: 150 },
@@ -27,6 +29,12 @@ export default function AnalyticsPage() {
     { name: 'Nov', sales: 2780 },
     { name: 'Dec', sales: 5000 },
   ];
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-6">
