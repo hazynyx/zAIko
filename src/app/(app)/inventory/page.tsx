@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { Search, Save, Edit2, Plus } from "lucide-react";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Search, Save, Edit2, Plus, Calendar, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
@@ -17,9 +17,13 @@ export default function InventoryPage() {
   const inventory = useStore(state => state.inventory);
   const updateStock = useStore(state => state.updateStock);
   const addProduct = useStore(state => state.addProduct);
+  const deleteProduct = useStore(state => state.deleteProduct);
   const [search, setSearch] = useState("");
-  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
-  const [newItemData, setNewItemData] = useState({ name: '', category: 'Groceries', price: '', stock: '' });
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newItemData, setNewItemData] = useState({ 
+    name: '', category: 'Groceries', price: '', stock: '', 
+    unit: 'pcs', warehouseLocation: '', estimatedExpiry: '', vendor: '' 
+  });
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
@@ -61,12 +65,26 @@ export default function InventoryPage() {
       name: newItemData.name,
       category: newItemData.category,
       price,
-      stock
+      stock,
+      unit: newItemData.unit,
+      warehouseLocation: newItemData.warehouseLocation,
+      estimatedExpiry: newItemData.estimatedExpiry,
+      vendor: newItemData.vendor
     });
     
     toast.success("Product added successfully!");
-    setIsAddSheetOpen(false);
-    setNewItemData({ name: '', category: 'Groceries', price: '', stock: '' });
+    setIsAddDialogOpen(false);
+    setNewItemData({ 
+      name: '', category: 'Groceries', price: '', stock: '', 
+      unit: 'pcs', warehouseLocation: '', estimatedExpiry: '', vendor: '' 
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this product?")) {
+      deleteProduct(id);
+      toast.success("Product deleted successfully!");
+    }
   };
 
   return (
@@ -76,21 +94,18 @@ export default function InventoryPage() {
           <h1 className="text-3xl font-bold tracking-tight">Live Inventory</h1>
           <p className="text-muted-foreground">Manage and override your current stock levels.</p>
         </div>
-        
-        <Sheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
-          <SheetTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" /> Add Product
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Add New Product</SheetTitle>
-              <SheetDescription>
-                Enter the details of the new item below.
-              </SheetDescription>
-            </SheetHeader>
-            <form onSubmit={handleAddProduct} className="space-y-4 mt-6">
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger render={<Button className="gap-2" />}>
+            <Plus className="h-4 w-4" /> Add Product
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Product</DialogTitle>
+              <DialogDescription>
+                Enter the comprehensive details of the new item below.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Product Name</Label>
                 <Input 
@@ -117,6 +132,53 @@ export default function InventoryPage() {
                   <option value="Personal Care">Personal Care</option>
                 </select>
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="vendor">Vendor / Distributor</Label>
+                <Input 
+                  id="vendor" 
+                  placeholder="e.g. ITC Limited" 
+                  value={newItemData.vendor}
+                  onChange={e => setNewItemData({...newItemData, vendor: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="warehouseLocation">Warehouse Location</Label>
+                <Input 
+                  id="warehouseLocation" 
+                  placeholder="e.g. Aisle 2, Rack A" 
+                  value={newItemData.warehouseLocation}
+                  onChange={e => setNewItemData({...newItemData, warehouseLocation: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="unit">Unit Type</Label>
+                <select 
+                  id="unit"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  value={newItemData.unit}
+                  onChange={e => setNewItemData({...newItemData, unit: e.target.value})}
+                >
+                  <option value="pcs">Pieces (pcs)</option>
+                  <option value="kg">Kilograms (kg)</option>
+                  <option value="liters">Liters (L)</option>
+                  <option value="bags">Bags</option>
+                  <option value="packets">Packets</option>
+                  <option value="cartons">Cartons</option>
+                  <option value="bottles">Bottles</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="estimatedExpiry">Est. Expiry Date</Label>
+                <Input 
+                  id="estimatedExpiry" 
+                  type="date"
+                  value={newItemData.estimatedExpiry}
+                  onChange={e => setNewItemData({...newItemData, estimatedExpiry: e.target.value})}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="price">Price (₹)</Label>
                 <Input 
@@ -142,10 +204,12 @@ export default function InventoryPage() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full mt-4">Save Product</Button>
+              <div className="col-span-1 md:col-span-2 mt-4">
+                <Button type="submit" className="w-full">Save Product to Inventory</Button>
+              </div>
             </form>
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <BentoCard>
@@ -178,7 +242,8 @@ export default function InventoryPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>SKU</TableHead>
-                <TableHead>Name</TableHead>
+                <TableHead>Name / Vendor</TableHead>
+                <TableHead>Location</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Price</TableHead>
@@ -196,8 +261,12 @@ export default function InventoryPage() {
               ) : (
                 filteredInventory.map(item => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.id}</TableCell>
-                    <TableCell>{item.name}</TableCell>
+                    <TableCell className="font-medium text-xs">{item.id}</TableCell>
+                    <TableCell>
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-xs text-muted-foreground">{item.vendor}</div>
+                    </TableCell>
+                    <TableCell className="text-xs">{item.warehouseLocation}</TableCell>
                     <TableCell>{item.category}</TableCell>
                     <TableCell>
                       <Badge variant={
@@ -210,14 +279,17 @@ export default function InventoryPage() {
                     <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
                     <TableCell className="text-right">
                       {editingId === item.id ? (
-                        <Input 
-                          type="number"
-                          className="w-20 ml-auto text-right h-8"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                        />
+                        <div className="flex items-center justify-end gap-1">
+                          <Input 
+                            type="number"
+                            className="w-16 text-right h-8"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                          />
+                          <span className="text-xs text-muted-foreground w-8 text-left">{item.unit}</span>
+                        </div>
                       ) : (
-                        item.stock
+                        <span>{item.stock} <span className="text-xs text-muted-foreground">{item.unit}</span></span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
@@ -226,9 +298,14 @@ export default function InventoryPage() {
                           <Save className="h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button size="sm" variant="ghost" onClick={() => handleEdit(item.id, item.stock)}>
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => handleEdit(item.id, item.stock)}>
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>

@@ -19,6 +19,7 @@ interface AppState {
   inventory: InventoryItem[];
   updateStock: (id: string, newStock: number) => void;
   addProduct: (item: Omit<InventoryItem, 'id' | 'status' | 'value'>) => void;
+  deleteProduct: (id: string) => void;
 
   timeSeriesData: TimeSeriesPoint[];
   
@@ -71,6 +72,9 @@ export const useStore = create<AppState>()(
         
         return { inventory: [...state.inventory, newItem] };
       }),
+      deleteProduct: (id) => set((state) => ({
+        inventory: state.inventory.filter(item => item.id !== id)
+      })),
 
       timeSeriesData: mockTimeSeries,
 

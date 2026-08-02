@@ -8,6 +8,10 @@ export interface InventoryItem {
   status: InventoryStatus;
   price: number;
   value: number;
+  unit: string;
+  warehouseLocation: string;
+  estimatedExpiry: string;
+  vendor: string;
 }
 
 export interface TimeSeriesPoint {
@@ -33,11 +37,11 @@ export interface Alert {
 }
 
 export const mockInventory: InventoryItem[] = [
-  { id: 'SKU-8832', name: 'Aashirvaad Atta (5kg)', category: 'Groceries', stock: 12, status: 'Low', price: 210, value: 2520 },
-  { id: 'SKU-9921', name: 'Maggi 2-Min Noodles', category: 'Snacks', stock: 450, status: 'In Stock', price: 14, value: 6300 },
-  { id: 'SKU-1002', name: 'Amul Taaza Milk (1L)', category: 'Dairy', stock: 0, status: 'Out of Stock', price: 68, value: 0 },
-  { id: 'SKU-4431', name: 'Tata Salt (1kg)', category: 'Groceries', stock: 85, status: 'In Stock', price: 24, value: 2040 },
-  { id: 'SKU-2314', name: 'Surf Excel Matic', category: 'Household', stock: 20, status: 'Low', price: 180, value: 3600 },
+  { id: 'SKU-8832', name: 'Aashirvaad Atta (5kg)', category: 'Groceries', stock: 12, status: 'Low', price: 210, value: 2520, unit: 'bags', warehouseLocation: 'Aisle 2, Rack A', estimatedExpiry: '2027-01-15', vendor: 'ITC Limited' },
+  { id: 'SKU-9921', name: 'Maggi 2-Min Noodles', category: 'Snacks', stock: 450, status: 'In Stock', price: 14, value: 6300, unit: 'packets', warehouseLocation: 'Aisle 3, Rack C', estimatedExpiry: '2026-10-20', vendor: 'Nestle India' },
+  { id: 'SKU-1002', name: 'Amul Taaza Milk (1L)', category: 'Dairy', stock: 0, status: 'Out of Stock', price: 68, value: 0, unit: 'cartons', warehouseLocation: 'Cold Storage 1', estimatedExpiry: '2026-08-05', vendor: 'Amul' },
+  { id: 'SKU-4431', name: 'Tata Salt (1kg)', category: 'Groceries', stock: 85, status: 'In Stock', price: 24, value: 2040, unit: 'bags', warehouseLocation: 'Aisle 2, Rack B', estimatedExpiry: '2028-05-10', vendor: 'Tata Consumer Products' },
+  { id: 'SKU-2314', name: 'Surf Excel Matic', category: 'Household', stock: 20, status: 'Low', price: 180, value: 3600, unit: 'bottles', warehouseLocation: 'Aisle 5, Rack A', estimatedExpiry: '2029-02-28', vendor: 'HUL' },
 ];
 
 const generateTimeSeries = (): TimeSeriesPoint[] => {
