@@ -11,7 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboard, Package, TrendingUp, Zap, BarChart3, Bell, SlidersHorizontal, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Package, TrendingUp, Zap, BarChart3, Bell, SlidersHorizontal, Settings, LogOut, Clock } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useStore } from "@/store/useStore"
@@ -23,6 +23,7 @@ const items = [
   { title: "Optimizations", url: "/optimizations", icon: Zap },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Alerts", url: "/alerts", icon: Bell },
+  { title: "Activity Log", url: "/activity", icon: Clock },
   { title: "Simulator", url: "/simulator", icon: SlidersHorizontal },
   { title: "Settings", url: "/settings", icon: Settings },
 ]

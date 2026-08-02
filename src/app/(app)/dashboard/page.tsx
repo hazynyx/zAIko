@@ -326,7 +326,14 @@ export default function DashboardPage() {
 
         {/* Row 4: Activity Log */}
         <BentoCard 
-          title={<span className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Daily Activity Log</span>}
+          title={
+            <div className="flex items-center justify-between w-full">
+              <span className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Daily Activity Log</span>
+              <Link href="/activity" className="text-xs font-normal text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                Show more <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
+          }
           className="col-span-1 lg:col-span-4 delay-[800ms]"
         >
           <div className="mt-4 space-y-4 max-h-[300px] overflow-y-auto pr-2">
