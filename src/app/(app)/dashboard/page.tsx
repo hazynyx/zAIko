@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const alerts = useStore(state => state.alerts);
   const transactions = useStore(state => state.transactions);
   const applyDiscountStore = useStore(state => state.applyDiscount);
+  const timeSeriesData = useStore(state => state.timeSeriesData);
   
   const [isDiscountDialogOpen, setIsDiscountDialogOpen] = useState(false);
   const [discountItem, setDiscountItem] = useState<{ id: string, name: string, price: number } | null>(null);
@@ -61,13 +62,31 @@ export default function DashboardPage() {
   const overstocked = [...inventory].sort((a, b) => b.stock - a.stock).slice(0, 3);
   const recommendedOrders = inventory.filter(i => (i.status === 'Low' || i.status === 'Out of Stock') && !i.orderedQuantity).slice(0, 3);
 
-  // Dummy data for sparkline
-  const accuracyData = [
-    { name: "Mon", value: 85 }, { name: "Tue", value: 88 },
-    { name: "Wed", value: 92 }, { name: "Thu", value: 90 },
-    { name: "Fri", value: 94 }, { name: "Sat", value: 96 },
-    { name: "Sun", value: 95 },
-  ];
+  // Dynamic ML Accuracy Calculation based on historical forecasts vs actuals
+  const historicalData = timeSeriesData.filter(d => d.actual !== null);
+  
+  let totalErrorPercentage = 0;
+  let errorCount = 0;
+  historicalData.forEach(d => {
+    if (d.actual && d.actual > 0) {
+      const error = Math.abs(d.actual - d.predicted);
+      totalErrorPercentage += (error / d.actual);
+      errorCount++;
+    }
+  });
+  
+  const averageError = errorCount > 0 ? (totalErrorPercentage / errorCount) : 0;
+  const mlAccuracy = Math.max(0, 100 - (averageError * 100)).toFixed(1);
+
+  // Take the last 7 days for the sparkline chart
+  const recentHistorical = historicalData.slice(-7).map((d) => {
+    const accuracy = d.actual && d.actual > 0 
+      ? Math.max(0, 100 - (Math.abs(d.actual - d.predicted) / d.actual * 100))
+      : 100;
+    const dateObj = new Date(d.date);
+    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+    return { name: dayName, value: accuracy };
+  });
 
   const handleAction = (action: string) => {
     toast.success(`${action} initiated successfully.`);
@@ -201,16 +220,22 @@ export default function DashboardPage() {
 
         <BentoCard 
           className="col-span-1 lg:col-span-1 delay-200"
-          title="ML Accuracy"
+          title={
+            <div className="flex items-center gap-2" title="How closely our AI's predicted demand matched the actual historical sales.">
+              ML Accuracy
+            </div>
+          }
         >
           <div className="mt-2">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-3xl font-bold tracking-tighter">95.2%</span>
-              <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 bg-emerald-500/10">High</Badge>
+              <span className="text-3xl font-bold tracking-tighter">{mlAccuracy}%</span>
+              <Badge variant="outline" className={`border-emerald-500/30 bg-emerald-500/10 ${parseFloat(mlAccuracy) > 90 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                {parseFloat(mlAccuracy) > 90 ? 'High' : 'Fair'}
+              </Badge>
             </div>
             <div className="h-[60px] w-full mt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={accuracyData}>
+                <LineChart data={recentHistorical}>
                   <Line type="monotone" dataKey="value" stroke="var(--primary)" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
