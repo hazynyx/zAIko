@@ -9,12 +9,13 @@ import { useEffect, useState } from "react";
 
 export default function SimulatorPage() {
   const [mounted, setMounted] = useState(false);
+  const [timeRange, setTimeRange] = useState(30);
   const timeSeriesData = useStore(state => state.timeSeriesData);
   const simulatorParams = useStore(state => state.simulatorParams);
   const updateSimulatorParam = useStore(state => state.updateSimulatorParam);
 
   const middleIndex = Math.floor(timeSeriesData.length / 2);
-  const futureData = timeSeriesData.slice(middleIndex, middleIndex + 30).map((point, index) => {
+  const futureData = timeSeriesData.slice(middleIndex, middleIndex + timeRange).map((point, index) => {
     const dateObj = new Date(point.date);
     const dayOfWeek = dateObj.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
@@ -69,9 +70,25 @@ export default function SimulatorPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">What-If Simulator</h1>
-        <p className="text-muted-foreground">Adjust parameters to simulate shifts in the demand forecast curve.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">What-If Simulator</h1>
+          <p className="text-muted-foreground">Adjust parameters to simulate shifts in the demand forecast curve.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-muted-foreground">Forecast Range:</Label>
+          <select 
+            className="flex h-9 w-32 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            value={timeRange}
+            onChange={(e) => setTimeRange(parseInt(e.target.value, 10))}
+          >
+            <option value="7">7 Days</option>
+            <option value="14">14 Days</option>
+            <option value="30">30 Days</option>
+            <option value="60">60 Days</option>
+            <option value="90">90 Days</option>
+          </select>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

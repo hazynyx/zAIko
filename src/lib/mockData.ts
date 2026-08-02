@@ -50,7 +50,7 @@ const generateTimeSeries = (): TimeSeriesPoint[] => {
   const data: TimeSeriesPoint[] = [];
   const today = new Date();
   
-  for (let i = -30; i <= 30; i++) {
+  for (let i = -90; i <= 90; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     const isFuture = i > 0;
