@@ -20,6 +20,7 @@ interface AppState {
   updateStock: (id: string, newStock: number) => void;
   addProduct: (item: Omit<InventoryItem, 'id' | 'status' | 'value'>) => void;
   deleteProduct: (id: string) => void;
+  applyDiscount: (id: string, discountPercent: number) => void;
 
   timeSeriesData: TimeSeriesPoint[];
   
@@ -74,6 +75,19 @@ export const useStore = create<AppState>()(
       }),
       deleteProduct: (id) => set((state) => ({
         inventory: state.inventory.filter(item => item.id !== id)
+      })),
+      applyDiscount: (id, discountPercent) => set((state) => ({
+        inventory: state.inventory.map(item => {
+          if (item.id === id) {
+            const newPrice = item.price * (1 - (discountPercent / 100));
+            return {
+              ...item,
+              price: newPrice,
+              value: newPrice * item.stock
+            };
+          }
+          return item;
+        })
       })),
 
       timeSeriesData: mockTimeSeries,

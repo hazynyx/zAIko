@@ -5,7 +5,10 @@ import { useStore } from "@/store/useStore";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, ArrowUpRight, ArrowDownRight, BarChart3, Download, Play, TrendingUp, Package, AlertTriangle, ShoppingCart } from "lucide-react";
+import { AlertCircle, ArrowUpRight, ArrowDownRight, BarChart3, Download, Play, TrendingUp, Package, AlertTriangle, ShoppingCart, Percent } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -15,6 +18,11 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const inventory = useStore(state => state.inventory);
   const alerts = useStore(state => state.alerts);
+  const applyDiscountStore = useStore(state => state.applyDiscount);
+  
+  const [isDiscountDialogOpen, setIsDiscountDialogOpen] = useState(false);
+  const [discountItem, setDiscountItem] = useState<{ id: string, name: string, price: number } | null>(null);
+  const [discountPercent, setDiscountPercent] = useState("10");
   
   // Existing Metrics
   const totalValue = inventory.reduce((acc, item) => acc + item.value, 0);
@@ -45,6 +53,25 @@ export default function DashboardPage() {
 
   const handleAction = (action: string) => {
     toast.success(`${action} initiated successfully.`);
+  };
+
+  const handleOpenDiscount = (id: string, name: string, price: number) => {
+    setDiscountItem({ id, name, price });
+    setDiscountPercent("10");
+    setIsDiscountDialogOpen(true);
+  };
+
+  const handleApplyDiscount = () => {
+    if (!discountItem) return;
+    const percent = parseFloat(discountPercent);
+    if (isNaN(percent) || percent < 0 || percent > 100) {
+      toast.error("Please enter a valid discount percentage (0-100).");
+      return;
+    }
+    
+    applyDiscountStore(discountItem.id, percent);
+    toast.success(`Applied ${percent}% discount to ${discountItem.name}`);
+    setIsDiscountDialogOpen(false);
   };
 
   useEffect(() => {
@@ -211,7 +238,7 @@ export default function DashboardPage() {
                     <p className="font-bold text-sm">{item.stock} {item.unit}</p>
                     <p className="text-xs text-destructive">Excess</p>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => handleAction(`Discount applied to ${item.name}`)}>
+                  <Button size="sm" variant="outline" onClick={() => handleOpenDiscount(item.id, item.name, item.price)}>
                     Discount
                   </Button>
                 </div>
@@ -238,6 +265,47 @@ export default function DashboardPage() {
           </div>
         </BentoCard>
       </div>
+
+      <Dialog open={isDiscountDialogOpen} onOpenChange={setIsDiscountDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Apply Discount</DialogTitle>
+            <DialogDescription>
+              Set a markdown percentage for {discountItem?.name} to help clear out excess inventory.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="discount" className="text-right">
+                Discount %
+              </Label>
+              <div className="col-span-3 relative">
+                <Input
+                  id="discount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={discountPercent}
+                  onChange={(e) => setDiscountPercent(e.target.value)}
+                  className="pl-8"
+                />
+                <Percent className="h-4 w-4 absolute left-2.5 top-2.5 text-muted-foreground" />
+              </div>
+            </div>
+            {discountItem && (
+              <div className="text-sm text-center text-muted-foreground mt-2">
+                New price will be: <span className="font-bold text-foreground">
+                  {formatCurrency(discountItem.price * (1 - (parseFloat(discountPercent || "0") / 100)))}
+                </span>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDiscountDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleApplyDiscount}>Apply Discount</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
