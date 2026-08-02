@@ -51,8 +51,9 @@ export default function SimulatorPage() {
       weatherMultiplier = 1 + (simulatorParams.weatherImpact / 200); 
     }
     
-    // 5. Random Noise for realism (+/- 5%)
-    const noise = 1 + ((Math.random() - 0.5) * 0.1); 
+    // 5. Deterministic Noise for realism (+/- 5%) so it doesn't jitter on every render
+    const pseudoRandom = Math.sin(index * 1234.5678) * 0.05;
+    const noise = 1 + pseudoRandom;
     
     const combinedMultiplier = baseWeekendSpike * marketingMultiplier * discountMultiplier * weatherMultiplier * noise;
     
