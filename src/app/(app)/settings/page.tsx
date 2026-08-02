@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Save } from "lucide-react";
+import { useStore } from "@/store/useStore";
 
 export default function SettingsPage() {
   const handleSave = (e: React.FormEvent) => {
@@ -59,7 +60,44 @@ export default function SettingsPage() {
           </div>
         </BentoCard>
 
-        <div className="flex justify-end">
+        <BentoCard title="Danger Zone" className="border-destructive">
+          <div className="space-y-4 max-w-lg mt-4">
+            <div className="flex flex-col gap-2">
+              <h3 className="font-semibold">Clear Sales History</h3>
+              <p className="text-sm text-muted-foreground mb-2">This will permanently delete all recorded transactions. The Top Selling metrics and Activity Logs will be reset to 0.</p>
+              <Button 
+                type="button" 
+                variant="destructive" 
+                onClick={() => {
+                  useStore.getState().clearTransactions();
+                  toast.success("Sales history cleared.");
+                }}
+              >
+                Clear All Transactions
+              </Button>
+            </div>
+            
+            <div className="border-t pt-4 mt-4 flex flex-col gap-2">
+              <h3 className="font-semibold text-destructive">Factory Reset</h3>
+              <p className="text-sm text-muted-foreground mb-2">This will wipe your entire inventory, settings, and logs, returning the app to its initial mock state.</p>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                onClick={() => {
+                  if (confirm("Are you absolutely sure you want to factory reset the app? All your data will be lost.")) {
+                    useStore.getState().factoryReset();
+                    toast.success("App has been factory reset.");
+                  }
+                }}
+              >
+                Factory Reset App
+              </Button>
+            </div>
+          </div>
+        </BentoCard>
+
+        <div className="flex justify-end pt-4">
           <Button type="submit" className="gap-2">
             <Save className="h-4 w-4" /> Save Changes
           </Button>

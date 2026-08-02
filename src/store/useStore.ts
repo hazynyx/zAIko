@@ -44,7 +44,9 @@ interface AppState {
     weatherImpact: number;
   };
   updateSimulatorParam: (param: keyof AppState['simulatorParams'], value: number) => void;
-  updateSimulatorParam: (param: keyof AppState['simulatorParams'], value: number) => void;
+
+  clearTransactions: () => void;
+  factoryReset: () => void;
 }
 
 const syncAlerts = (currentAlerts: Alert[], inventory: InventoryItem[]): Alert[] => {
@@ -340,7 +342,22 @@ export const useStore = create<AppState>()(
       },
       updateSimulatorParam: (param, value) => set((state) => ({
         simulatorParams: { ...state.simulatorParams, [param]: value }
-      }))
+      })),
+
+      clearTransactions: () => set({ transactions: [] }),
+      
+      factoryReset: () => set({
+        inventory: mockInventory,
+        transactions: mockTransactions,
+        alerts: mockAlerts,
+        optimizations: mockOptimizations,
+        timeSeriesData: mockTimeSeries,
+        simulatorParams: {
+          marketingSpend: 1000,
+          discountPercent: 10,
+          weatherImpact: 0,
+        }
+      })
     }),
     {
       name: 'zaiko-storage',
