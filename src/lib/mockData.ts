@@ -6,6 +6,8 @@ export interface InventoryItem {
   category: string;
   stock: number;
   status: InventoryStatus;
+  costPrice: number;
+  retailPrice: number;
   price: number;
   value: number;
   unit: string;
@@ -37,11 +39,11 @@ export interface Alert {
 }
 
 export const mockInventory: InventoryItem[] = [
-  { id: 'SKU-8832', name: 'Aashirvaad Atta (5kg)', category: 'Groceries', stock: 12, status: 'Low', price: 210, value: 2520, unit: 'bags', warehouseLocation: 'Aisle 2, Rack A', estimatedExpiry: '2027-01-15', vendor: 'ITC Limited' },
-  { id: 'SKU-9921', name: 'Maggi 2-Min Noodles', category: 'Snacks', stock: 450, status: 'In Stock', price: 14, value: 6300, unit: 'packets', warehouseLocation: 'Aisle 3, Rack C', estimatedExpiry: '2026-10-20', vendor: 'Nestle India' },
-  { id: 'SKU-1002', name: 'Amul Taaza Milk (1L)', category: 'Dairy', stock: 0, status: 'Out of Stock', price: 68, value: 0, unit: 'cartons', warehouseLocation: 'Cold Storage 1', estimatedExpiry: '2026-08-05', vendor: 'Amul' },
-  { id: 'SKU-4431', name: 'Tata Salt (1kg)', category: 'Groceries', stock: 85, status: 'In Stock', price: 24, value: 2040, unit: 'bags', warehouseLocation: 'Aisle 2, Rack B', estimatedExpiry: '2028-05-10', vendor: 'Tata Consumer Products' },
-  { id: 'SKU-2314', name: 'Surf Excel Matic', category: 'Household', stock: 20, status: 'Low', price: 180, value: 3600, unit: 'bottles', warehouseLocation: 'Aisle 5, Rack A', estimatedExpiry: '2029-02-28', vendor: 'HUL' },
+  { id: 'SKU-8832', name: 'Aashirvaad Atta (5kg)', category: 'Groceries', stock: 12, status: 'Low', costPrice: 180, retailPrice: 210, price: 210, value: 2520, unit: 'bags', warehouseLocation: 'Aisle 2, Rack A', estimatedExpiry: '2027-01-15', vendor: 'ITC Limited' },
+  { id: 'SKU-9921', name: 'Maggi 2-Min Noodles', category: 'Snacks', stock: 450, status: 'In Stock', costPrice: 10, retailPrice: 14, price: 14, value: 6300, unit: 'packets', warehouseLocation: 'Aisle 3, Rack C', estimatedExpiry: '2026-10-20', vendor: 'Nestle India' },
+  { id: 'SKU-1002', name: 'Amul Taaza Milk (1L)', category: 'Dairy', stock: 0, status: 'Out of Stock', costPrice: 55, retailPrice: 68, price: 68, value: 0, unit: 'cartons', warehouseLocation: 'Cold Storage 1', estimatedExpiry: '2026-08-05', vendor: 'Amul' },
+  { id: 'SKU-4431', name: 'Tata Salt (1kg)', category: 'Groceries', stock: 85, status: 'In Stock', costPrice: 18, retailPrice: 24, price: 24, value: 2040, unit: 'bags', warehouseLocation: 'Aisle 2, Rack B', estimatedExpiry: '2028-05-10', vendor: 'Tata Consumer Products' },
+  { id: 'SKU-2314', name: 'Surf Excel Matic', category: 'Household', stock: 20, status: 'Low', costPrice: 150, retailPrice: 180, price: 180, value: 3600, unit: 'bottles', warehouseLocation: 'Aisle 5, Rack A', estimatedExpiry: '2029-02-28', vendor: 'HUL' },
 ];
 
 const generateTimeSeries = (): TimeSeriesPoint[] => {

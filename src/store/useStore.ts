@@ -66,9 +66,10 @@ export const useStore = create<AppState>()(
         
         const newItem: InventoryItem = {
           ...item,
+          price: item.price !== undefined ? item.price : item.retailPrice,
           id: `SKU-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
           status,
-          value: item.price * item.stock
+          value: (item.price !== undefined ? item.price : item.retailPrice) * item.stock
         };
         
         return { inventory: [...state.inventory, newItem] };

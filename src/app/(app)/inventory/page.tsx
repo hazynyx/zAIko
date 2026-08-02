@@ -21,7 +21,7 @@ export default function InventoryPage() {
   const [search, setSearch] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newItemData, setNewItemData] = useState({ 
-    name: '', category: 'Groceries', price: '', stock: '', 
+    name: '', category: 'Groceries', costPrice: '', retailPrice: '', stock: '', 
     unit: 'pcs', warehouseLocation: '', estimatedExpiry: '', vendor: '' 
   });
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -53,10 +53,11 @@ export default function InventoryPage() {
 
   const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
-    const price = parseFloat(newItemData.price);
+    const costPrice = parseFloat(newItemData.costPrice);
+    const retailPrice = parseFloat(newItemData.retailPrice);
     const stock = parseInt(newItemData.stock, 10);
     
-    if (!newItemData.name || !newItemData.category || isNaN(price) || isNaN(stock)) {
+    if (!newItemData.name || !newItemData.category || isNaN(costPrice) || isNaN(retailPrice) || isNaN(stock)) {
       toast.error("Please fill in all fields correctly.");
       return;
     }
@@ -64,7 +65,9 @@ export default function InventoryPage() {
     addProduct({
       name: newItemData.name,
       category: newItemData.category,
-      price,
+      costPrice,
+      retailPrice,
+      price: retailPrice, // initially price matches retail
       stock,
       unit: newItemData.unit,
       warehouseLocation: newItemData.warehouseLocation,
@@ -75,7 +78,7 @@ export default function InventoryPage() {
     toast.success("Product added successfully!");
     setIsAddDialogOpen(false);
     setNewItemData({ 
-      name: '', category: 'Groceries', price: '', stock: '', 
+      name: '', category: 'Groceries', costPrice: '', retailPrice: '', stock: '', 
       unit: 'pcs', warehouseLocation: '', estimatedExpiry: '', vendor: '' 
     });
   };
@@ -180,15 +183,28 @@ export default function InventoryPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Price (₹)</Label>
+                <Label htmlFor="costPrice">Cost Price (₹)</Label>
                 <Input 
-                  id="price" 
+                  id="costPrice" 
                   type="number" 
                   min="0" 
                   step="0.01" 
                   placeholder="0.00" 
-                  value={newItemData.price}
-                  onChange={e => setNewItemData({...newItemData, price: e.target.value})}
+                  value={newItemData.costPrice}
+                  onChange={e => setNewItemData({...newItemData, costPrice: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="retailPrice">Retail Price / MRP (₹)</Label>
+                <Input 
+                  id="retailPrice" 
+                  type="number" 
+                  min="0" 
+                  step="0.01" 
+                  placeholder="0.00" 
+                  value={newItemData.retailPrice}
+                  onChange={e => setNewItemData({...newItemData, retailPrice: e.target.value})}
                   required
                 />
               </div>
@@ -246,7 +262,9 @@ export default function InventoryPage() {
                 <TableHead>Location</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-right">Cost Price</TableHead>
+                <TableHead className="text-right">Retail / MRP</TableHead>
+                <TableHead className="text-right">Selling Price</TableHead>
                 <TableHead className="text-right">Stock</TableHead>
                 <TableHead className="w-[100px]"></TableHead>
               </TableRow>
@@ -276,7 +294,15 @@ export default function InventoryPage() {
                         {item.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{formatCurrency(item.costPrice)}</TableCell>
+                    <TableCell className="text-right">
+                      {item.retailPrice > item.price ? (
+                        <span className="line-through text-muted-foreground">{formatCurrency(item.retailPrice)}</span>
+                      ) : (
+                        formatCurrency(item.retailPrice)
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-emerald-600">{formatCurrency(item.price)}</TableCell>
                     <TableCell className="text-right">
                       {editingId === item.id ? (
                         <div className="flex items-center justify-end gap-1">
