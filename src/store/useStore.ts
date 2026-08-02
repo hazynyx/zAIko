@@ -87,6 +87,39 @@ const syncAlerts = (currentAlerts: Alert[], inventory: InventoryItem[]): Alert[]
   }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 };
 
+const syncOptimizations = (currentOpts: Optimization[], inventory: InventoryItem[]): Optimization[] => {
+  const desiredOptIds = new Set<string>();
+  const newOpts: Optimization[] = [...currentOpts];
+
+  const addOrKeepOpt = (id: string, message: string, type: 'sale' | 'reorder' | 'transfer') => {
+    desiredOptIds.add(id);
+    if (!newOpts.some(o => o.id === id)) {
+      newOpts.push({
+        id,
+        message,
+        status: 'pending',
+        type
+      });
+    }
+  };
+
+  inventory.forEach(item => {
+    if (item.stock > 400 || item.value > 5000) {
+      addOrKeepOpt(`OPT-OVS-${item.id}`, `Initiate bundle offer on ${item.name} to clear excess stock before value depreciates`, 'sale');
+    }
+    if (item.status === 'Low' && !item.orderedQuantity) {
+      addOrKeepOpt(`OPT-LOW-${item.id}`, `Reorder ${item.name} immediately, distributor lead time is 2 days`, 'reorder');
+    }
+  });
+
+  return newOpts.filter(o => {
+    if (o.id.startsWith('OPT-OVS-') || o.id.startsWith('OPT-LOW-')) {
+      return desiredOptIds.has(o.id);
+    }
+    return true; 
+  });
+};
+
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
@@ -106,7 +139,11 @@ export const useStore = create<AppState>()(
           }
           return item;
         });
-        return { inventory, alerts: syncAlerts(state.alerts, inventory) };
+        return { 
+          inventory, 
+          alerts: syncAlerts(state.alerts, inventory),
+          optimizations: syncOptimizations(state.optimizations, inventory) 
+        };
       }),
       updateProduct: (id, updates) => set((state) => {
         const inventory = state.inventory.map(item => {
@@ -121,7 +158,11 @@ export const useStore = create<AppState>()(
           }
           return item;
         });
-        return { inventory, alerts: syncAlerts(state.alerts, inventory) };
+        return { 
+          inventory, 
+          alerts: syncAlerts(state.alerts, inventory),
+          optimizations: syncOptimizations(state.optimizations, inventory)
+        };
       }),
       recordSale: (id, quantity) => set((state) => {
         let soldItemName = '';
@@ -164,7 +205,8 @@ export const useStore = create<AppState>()(
           inventory, 
           alerts: syncAlerts(state.alerts, inventory), 
           transactions: [newTx, ...state.transactions],
-          timeSeriesData
+          timeSeriesData,
+          optimizations: syncOptimizations(state.optimizations, inventory)
         };
       }),
       reorderProduct: (id, quantity) => set((state) => {
@@ -184,7 +226,12 @@ export const useStore = create<AppState>()(
           itemId: id,
           quantity: quantity
         };
-        return { inventory, alerts: syncAlerts(state.alerts, inventory), transactions: [newTx, ...state.transactions] };
+        return { 
+          inventory, 
+          alerts: syncAlerts(state.alerts, inventory), 
+          transactions: [newTx, ...state.transactions],
+          optimizations: syncOptimizations(state.optimizations, inventory)
+        };
       }),
       receiveOrder: (id) => set((state) => {
         let itemName = '';
@@ -219,7 +266,12 @@ export const useStore = create<AppState>()(
           itemId: id,
           quantity: receivedQty
         };
-        return { inventory, alerts: syncAlerts(state.alerts, inventory), transactions: [newTx, ...state.transactions] };
+        return { 
+          inventory, 
+          alerts: syncAlerts(state.alerts, inventory), 
+          transactions: [newTx, ...state.transactions],
+          optimizations: syncOptimizations(state.optimizations, inventory)
+        };
       }),
       addProduct: (item) => set((state) => {
         let status: InventoryItem['status'] = 'In Stock';
@@ -235,11 +287,19 @@ export const useStore = create<AppState>()(
         };
         
         const inventory = [...state.inventory, newItem];
-        return { inventory, alerts: syncAlerts(state.alerts, inventory) };
+        return { 
+          inventory, 
+          alerts: syncAlerts(state.alerts, inventory),
+          optimizations: syncOptimizations(state.optimizations, inventory)
+        };
       }),
       deleteProduct: (id) => set((state) => {
         const inventory = state.inventory.filter(item => item.id !== id);
-        return { inventory, alerts: syncAlerts(state.alerts, inventory) };
+        return { 
+          inventory, 
+          alerts: syncAlerts(state.alerts, inventory),
+          optimizations: syncOptimizations(state.optimizations, inventory)
+        };
       }),
       applyDiscount: (id, discountPercent) => set((state) => {
         const inventory = state.inventory.map(item => {
