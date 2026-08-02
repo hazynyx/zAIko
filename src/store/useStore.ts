@@ -18,6 +18,7 @@ interface AppState {
 
   inventory: InventoryItem[];
   updateStock: (id: string, newStock: number) => void;
+  updateProduct: (id: string, updates: Partial<InventoryItem>) => void;
   addProduct: (item: Omit<InventoryItem, 'id' | 'status' | 'value'>) => void;
   deleteProduct: (id: string) => void;
   applyDiscount: (id: string, discountPercent: number) => void;
@@ -54,7 +55,22 @@ export const useStore = create<AppState>()(
             if (newStock === 0) status = 'Out of Stock';
             else if (newStock < 20) status = 'Low';
             else status = 'In Stock';
-            return { ...item, stock: newStock, status };
+            return { ...item, stock: newStock, status, value: item.price * newStock };
+          }
+          return item;
+        })
+      })),
+      updateProduct: (id, updates) => set((state) => ({
+        inventory: state.inventory.map(item => {
+          if (item.id === id) {
+            const updatedItem = { ...item, ...updates };
+            // Recalculate dynamic fields
+            if (updatedItem.stock === 0) updatedItem.status = 'Out of Stock';
+            else if (updatedItem.stock < 20) updatedItem.status = 'Low';
+            else updatedItem.status = 'In Stock';
+            
+            updatedItem.value = updatedItem.price * updatedItem.stock;
+            return updatedItem;
           }
           return item;
         })

@@ -15,18 +15,26 @@ import { toast } from "sonner";
 
 export default function InventoryPage() {
   const inventory = useStore(state => state.inventory);
-  const updateStock = useStore(state => state.updateStock);
   const addProduct = useStore(state => state.addProduct);
+  const updateProduct = useStore(state => state.updateProduct);
   const deleteProduct = useStore(state => state.deleteProduct);
   const [search, setSearch] = useState("");
+  
+  // Add Product State
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newItemData, setNewItemData] = useState({ 
     name: '', category: 'Groceries', costPrice: '', retailPrice: '', stock: '', 
     unit: 'pcs', warehouseLocation: '', estimatedExpiry: '', vendor: '' 
   });
+
+  // Edit Product State
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editItemData, setEditItemData] = useState({
+    id: '', name: '', category: '', costPrice: '', retailPrice: '', price: '', stock: '', 
+    unit: '', warehouseLocation: '', estimatedExpiry: '', vendor: '' 
+  });
+
   const [categoryFilter, setCategoryFilter] = useState("All");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState<string>("");
 
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -35,20 +43,50 @@ export default function InventoryPage() {
     return matchesSearch && matchesCategory;
   });
 
-  const handleEdit = (id: string, currentStock: number) => {
-    setEditingId(id);
-    setEditValue(currentStock.toString());
+  const handleEdit = (item: any) => {
+    setEditItemData({
+      id: item.id,
+      name: item.name || '',
+      category: item.category || '',
+      costPrice: item.costPrice?.toString() || '0',
+      retailPrice: item.retailPrice?.toString() || '0',
+      price: item.price?.toString() || '0',
+      stock: item.stock?.toString() || '0',
+      unit: item.unit || '',
+      warehouseLocation: item.warehouseLocation || '',
+      estimatedExpiry: item.estimatedExpiry || '',
+      vendor: item.vendor || ''
+    });
+    setIsEditDialogOpen(true);
   };
 
-  const handleSave = (id: string) => {
-    const newStock = parseInt(editValue, 10);
-    if (isNaN(newStock) || newStock < 0) {
-      toast.error("Invalid stock value");
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const costPrice = parseFloat(editItemData.costPrice);
+    const retailPrice = parseFloat(editItemData.retailPrice);
+    const price = parseFloat(editItemData.price);
+    const stock = parseInt(editItemData.stock, 10);
+    
+    if (!editItemData.name || !editItemData.category || isNaN(costPrice) || isNaN(retailPrice) || isNaN(price) || isNaN(stock)) {
+      toast.error("Please fill in all fields correctly.");
       return;
     }
-    updateStock(id, newStock);
-    setEditingId(null);
-    toast.success("Stock updated successfully");
+
+    updateProduct(editItemData.id, {
+      name: editItemData.name,
+      category: editItemData.category,
+      costPrice,
+      retailPrice,
+      price,
+      stock,
+      unit: editItemData.unit,
+      warehouseLocation: editItemData.warehouseLocation,
+      estimatedExpiry: editItemData.estimatedExpiry,
+      vendor: editItemData.vendor
+    });
+    
+    toast.success("Product updated successfully!");
+    setIsEditDialogOpen(false);
   };
 
   const handleAddProduct = (e: React.FormEvent) => {
@@ -97,6 +135,8 @@ export default function InventoryPage() {
           <h1 className="text-3xl font-bold tracking-tight">Live Inventory</h1>
           <p className="text-muted-foreground">Manage and override your current stock levels.</p>
         </div>
+        
+        {/* Add Product Dialog */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger render={<Button className="gap-2" />}>
             <Plus className="h-4 w-4" /> Add Product
@@ -228,6 +268,140 @@ export default function InventoryPage() {
         </Dialog>
       </div>
 
+      {/* Edit Product Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+            <DialogDescription>
+              Update the details of the product below.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveEdit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Product Name</Label>
+              <Input 
+                id="edit-name" 
+                value={editItemData.name}
+                onChange={e => setEditItemData({...editItemData, name: e.target.value})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Category</Label>
+              <select 
+                id="edit-category"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                value={editItemData.category}
+                onChange={e => setEditItemData({...editItemData, category: e.target.value})}
+              >
+                <option value="Groceries">Groceries</option>
+                <option value="Snacks">Snacks</option>
+                <option value="Dairy">Dairy</option>
+                <option value="Household">Household</option>
+                <option value="Beverages">Beverages</option>
+                <option value="Personal Care">Personal Care</option>
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-vendor">Vendor / Distributor</Label>
+              <Input 
+                id="edit-vendor" 
+                value={editItemData.vendor}
+                onChange={e => setEditItemData({...editItemData, vendor: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-warehouseLocation">Warehouse Location</Label>
+              <Input 
+                id="edit-warehouseLocation" 
+                value={editItemData.warehouseLocation}
+                onChange={e => setEditItemData({...editItemData, warehouseLocation: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-unit">Unit Type</Label>
+              <select 
+                id="edit-unit"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                value={editItemData.unit}
+                onChange={e => setEditItemData({...editItemData, unit: e.target.value})}
+              >
+                <option value="pcs">Pieces (pcs)</option>
+                <option value="kg">Kilograms (kg)</option>
+                <option value="liters">Liters (L)</option>
+                <option value="bags">Bags</option>
+                <option value="packets">Packets</option>
+                <option value="cartons">Cartons</option>
+                <option value="bottles">Bottles</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-estimatedExpiry">Est. Expiry Date</Label>
+              <Input 
+                id="edit-estimatedExpiry" 
+                type="date"
+                value={editItemData.estimatedExpiry}
+                onChange={e => setEditItemData({...editItemData, estimatedExpiry: e.target.value})}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-costPrice">Cost Price (₹)</Label>
+              <Input 
+                id="edit-costPrice" 
+                type="number" 
+                min="0" 
+                step="0.01" 
+                value={editItemData.costPrice}
+                onChange={e => setEditItemData({...editItemData, costPrice: e.target.value})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-retailPrice">Retail Price / MRP (₹)</Label>
+              <Input 
+                id="edit-retailPrice" 
+                type="number" 
+                min="0" 
+                step="0.01" 
+                value={editItemData.retailPrice}
+                onChange={e => setEditItemData({...editItemData, retailPrice: e.target.value})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-price">Current Selling Price (₹)</Label>
+              <Input 
+                id="edit-price" 
+                type="number" 
+                min="0" 
+                step="0.01" 
+                value={editItemData.price}
+                onChange={e => setEditItemData({...editItemData, price: e.target.value})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-stock">Stock Left</Label>
+              <Input 
+                id="edit-stock" 
+                type="number" 
+                min="0" 
+                value={editItemData.stock}
+                onChange={e => setEditItemData({...editItemData, stock: e.target.value})}
+                required
+              />
+            </div>
+            <div className="col-span-1 md:col-span-2 mt-4">
+              <Button type="submit" className="w-full">Save Changes</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <BentoCard>
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
           <div className="relative flex-1 w-full sm:max-w-sm">
@@ -304,35 +478,17 @@ export default function InventoryPage() {
                     </TableCell>
                     <TableCell className="text-right font-bold text-emerald-600">{formatCurrency(item.price)}</TableCell>
                     <TableCell className="text-right">
-                      {editingId === item.id ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <Input 
-                            type="number"
-                            className="w-16 text-right h-8"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                          />
-                          <span className="text-xs text-muted-foreground w-8 text-left">{item.unit}</span>
-                        </div>
-                      ) : (
-                        <span>{item.stock} <span className="text-xs text-muted-foreground">{item.unit}</span></span>
-                      )}
+                      <span>{item.stock} <span className="text-xs text-muted-foreground">{item.unit}</span></span>
                     </TableCell>
                     <TableCell className="text-right">
-                      {editingId === item.id ? (
-                        <Button size="sm" variant="ghost" onClick={() => handleSave(item.id)}>
-                          <Save className="h-4 w-4" />
+                      <div className="flex justify-end gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(item)}>
+                          <Edit2 className="h-4 w-4" />
                         </Button>
-                      ) : (
-                        <div className="flex justify-end gap-1">
-                          <Button size="sm" variant="ghost" onClick={() => handleEdit(item.id, item.stock)}>
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
+                        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

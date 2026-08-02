@@ -13,29 +13,47 @@ export default function SimulatorPage() {
   const simulatorParams = useStore(state => state.simulatorParams);
   const updateSimulatorParam = useStore(state => state.updateSimulatorParam);
 
-  // Generate simulated data by applying modifiers to the base predicted data
   const middleIndex = Math.floor(timeSeriesData.length / 2);
-  const futureData = timeSeriesData.slice(middleIndex, middleIndex + 30).map(point => {
+  const futureData = timeSeriesData.slice(middleIndex, middleIndex + 30).map((point, index) => {
     const dateObj = new Date(point.date);
     const dayOfWeek = dateObj.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     
-    // Weekend multiplier (people buy more groceries on weekends)
+    // 1. Base Weekend Spike
     const baseWeekendSpike = isWeekend ? 1.3 : 1.0;
     
-    // Marketing creates a multiplier effect (diminishing returns using log)
-    // e.g. 0 spend = 1.0, 5000 spend = ~1.37
-    const marketingMultiplier = 1 + (Math.log10(1 + simulatorParams.marketingSpend) / 10);
+    // 2. Marketing (Decay Effect)
+    // Marketing creates a hype spike that decays over 14 days
+    const marketingPeak = Math.log10(1 + simulatorParams.marketingSpend) / 8; 
+    const marketingDecay = Math.max(0, 1 - (index / 14)); // Decays to 0 by day 14
+    const marketingMultiplier = 1 + (marketingPeak * marketingDecay);
     
-    // Discount elasticity (highly elastic on weekends for groceries)
-    // 0% = 1.0, 50% = 1.5 on weekdays, 2.0 on weekends
-    const discountMultiplier = 1 + (simulatorParams.discountPercent / 100) * (isWeekend ? 2 : 1);
+    // 3. Discount (Demand Pull-Forward Effect)
+    // Massive spike initially, but drops below 1.0 later because people hoarded items
+    const discountStrength = simulatorParams.discountPercent / 100;
+    let discountMultiplier = 1.0;
+    if (index < 5) {
+      // First 5 days: Hoarding phase (spike)
+      discountMultiplier = 1 + (discountStrength * (isWeekend ? 2.5 : 1.5));
+    } else if (index >= 5 && index < 15) {
+      // Day 5 to 15: Demand drought (people already have stock)
+      discountMultiplier = Math.max(0.4, 1 - (discountStrength * 0.8));
+    }
     
-    // Weather negatively impacts footfall
-    // 100% adverse weather = 66% drop in sales
-    const weatherMultiplier = 1 - (simulatorParams.weatherImpact / 150); 
+    // 4. Weather Impact (Short-term storm effect)
+    // Adverse weather hits hard on days 1-3, then recovers with panic buying
+    let weatherMultiplier = 1.0;
+    if (index < 3) {
+      weatherMultiplier = Math.max(0.1, 1 - (simulatorParams.weatherImpact / 100));
+    } else if (index === 3 || index === 4) {
+      // Post-storm panic buying to restock
+      weatherMultiplier = 1 + (simulatorParams.weatherImpact / 200); 
+    }
     
-    const combinedMultiplier = baseWeekendSpike * marketingMultiplier * discountMultiplier * weatherMultiplier;
+    // 5. Random Noise for realism (+/- 5%)
+    const noise = 1 + ((Math.random() - 0.5) * 0.1); 
+    
+    const combinedMultiplier = baseWeekendSpike * marketingMultiplier * discountMultiplier * weatherMultiplier * noise;
     
     return {
       ...point,
