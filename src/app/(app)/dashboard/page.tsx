@@ -5,7 +5,7 @@ import { useStore } from "@/store/useStore";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, ArrowUpRight, ArrowDownRight, BarChart3, Download, Play, TrendingUp, Package, AlertTriangle, ShoppingCart, Percent } from "lucide-react";
+import { AlertCircle, ArrowUpRight, ArrowDownRight, BarChart3, Download, Play, TrendingUp, Package, AlertTriangle, ShoppingCart, Percent, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const inventory = useStore(state => state.inventory);
   const alerts = useStore(state => state.alerts);
+  const transactions = useStore(state => state.transactions);
   const applyDiscountStore = useStore(state => state.applyDiscount);
   
   const [isDiscountDialogOpen, setIsDiscountDialogOpen] = useState(false);
@@ -320,6 +321,44 @@ export default function DashboardPage() {
                 <Download className="h-4 w-4 mr-2" /> Valuation Report
               </Button>
             </div>
+          </div>
+        </BentoCard>
+
+        {/* Row 4: Activity Log */}
+        <BentoCard 
+          title={<span className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Daily Activity Log</span>}
+          className="col-span-1 lg:col-span-4 delay-[800ms]"
+        >
+          <div className="mt-4 space-y-4 max-h-[300px] overflow-y-auto pr-2">
+            {transactions.slice(0, 20).map((tx) => (
+              <div key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border bg-card text-sm gap-2 sm:gap-0">
+                <div className="flex items-start sm:items-center gap-3">
+                  <Badge variant={
+                    tx.type === 'sale' ? 'default' :
+                    tx.type === 'reorder' ? 'secondary' :
+                    tx.type === 'receive' ? 'outline' : 'outline'
+                  } className="capitalize shrink-0">
+                    {tx.type}
+                  </Badge>
+                  <div>
+                    <p className="font-medium">{tx.message}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(tx.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+                {tx.amount !== undefined && tx.amount > 0 && (
+                  <div className="font-bold text-emerald-600 shrink-0">
+                    +{formatCurrency(tx.amount)}
+                  </div>
+                )}
+              </div>
+            ))}
+            {transactions.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No activity recorded today.
+              </div>
+            )}
           </div>
         </BentoCard>
       </div>

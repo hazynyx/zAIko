@@ -39,6 +39,14 @@ export interface Alert {
   severity: 'high' | 'medium' | 'low';
 }
 
+export interface Transaction {
+  id: string;
+  type: 'sale' | 'reorder' | 'receive' | 'discount' | 'other';
+  message: string;
+  timestamp: string;
+  amount?: number; // monetary impact if applicable
+}
+
 export const mockInventory: InventoryItem[] = [
   { id: 'SKU-8832', name: 'Aashirvaad Atta (5kg)', category: 'Groceries', stock: 12, status: 'Low', costPrice: 180, retailPrice: 210, price: 210, value: 2520, unit: 'bags', warehouseLocation: 'Aisle 2, Rack A', estimatedExpiry: '2027-01-15', vendor: 'ITC Limited' },
   { id: 'SKU-9921', name: 'Maggi 2-Min Noodles', category: 'Snacks', stock: 450, status: 'In Stock', costPrice: 10, retailPrice: 14, price: 14, value: 6300, unit: 'packets', warehouseLocation: 'Aisle 3, Rack C', estimatedExpiry: '2026-10-20', vendor: 'Nestle India' },
@@ -80,4 +88,9 @@ export const mockOptimizations: Optimization[] = [
 export const mockAlerts: Alert[] = [
   { id: 'ALT-1', message: 'Sudden spike in demand for Amul Milk detected in local area', timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), severity: 'high' },
   { id: 'ALT-2', message: 'Stock for Aashirvaad Atta dropping faster than predicted', timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(), severity: 'medium' },
+];
+
+export const mockTransactions: Transaction[] = [
+  { id: 'TXN-1', type: 'sale', message: 'Sold 5 units of Maggi 2-Min Noodles', timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), amount: 70 },
+  { id: 'TXN-2', type: 'reorder', message: 'Placed reorder for 50 units of Amul Taaza Milk', timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString() },
 ];

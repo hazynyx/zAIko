@@ -5,10 +5,12 @@ import {
   TimeSeriesPoint, 
   Optimization, 
   Alert,
+  Transaction,
   mockInventory,
   mockTimeSeries,
   mockOptimizations,
-  mockAlerts
+  mockAlerts,
+  mockTransactions
 } from '@/lib/mockData';
 
 interface AppState {
@@ -33,6 +35,7 @@ interface AppState {
   rejectOptimization: (id: string) => void;
 
   alerts: Alert[];
+  transactions: Transaction[];
   
   // Simulator parameters
   simulatorParams: {
@@ -121,8 +124,12 @@ export const useStore = create<AppState>()(
         return { inventory, alerts: syncAlerts(state.alerts, inventory) };
       }),
       recordSale: (id, quantity) => set((state) => {
+        let soldItemName = '';
+        let revenue = 0;
         const inventory = state.inventory.map(item => {
           if (item.id === id) {
+            soldItemName = item.name;
+            revenue = quantity * item.price;
             const newStock = Math.max(0, item.stock - quantity);
             let status = item.status;
             if (newStock === 0) status = 'Out of Stock';
@@ -132,17 +139,39 @@ export const useStore = create<AppState>()(
           }
           return item;
         });
-        return { inventory, alerts: syncAlerts(state.alerts, inventory) };
+        const newTx: Transaction = {
+          id: `TXN-${Date.now()}`,
+          type: 'sale',
+          message: `Sold ${quantity} units of ${soldItemName}`,
+          timestamp: new Date().toISOString(),
+          amount: revenue
+        };
+        return { inventory, alerts: syncAlerts(state.alerts, inventory), transactions: [newTx, ...state.transactions] };
       }),
       reorderProduct: (id, quantity) => set((state) => {
-        const inventory = state.inventory.map(item => 
-          item.id === id ? { ...item, orderedQuantity: (item.orderedQuantity || 0) + quantity } : item
-        );
-        return { inventory, alerts: syncAlerts(state.alerts, inventory) };
+        let itemName = '';
+        const inventory = state.inventory.map(item => {
+          if (item.id === id) {
+            itemName = item.name;
+            return { ...item, orderedQuantity: (item.orderedQuantity || 0) + quantity };
+          }
+          return item;
+        });
+        const newTx: Transaction = {
+          id: `TXN-${Date.now()}`,
+          type: 'reorder',
+          message: `Placed reorder for ${quantity} units of ${itemName}`,
+          timestamp: new Date().toISOString()
+        };
+        return { inventory, alerts: syncAlerts(state.alerts, inventory), transactions: [newTx, ...state.transactions] };
       }),
       receiveOrder: (id) => set((state) => {
+        let itemName = '';
+        let receivedQty = 0;
         const inventory = state.inventory.map(item => {
           if (item.id === id && item.orderedQuantity) {
+            itemName = item.name;
+            receivedQty = item.orderedQuantity;
             const newStock = item.stock + item.orderedQuantity;
             let status = item.status;
             if (newStock === 0) status = 'Out of Stock';
@@ -159,7 +188,15 @@ export const useStore = create<AppState>()(
           }
           return item;
         });
-        return { inventory, alerts: syncAlerts(state.alerts, inventory) };
+        if (!itemName) return { inventory, alerts: syncAlerts(state.alerts, inventory) };
+        
+        const newTx: Transaction = {
+          id: `TXN-${Date.now()}`,
+          type: 'receive',
+          message: `Received shipment of ${receivedQty} units of ${itemName}`,
+          timestamp: new Date().toISOString()
+        };
+        return { inventory, alerts: syncAlerts(state.alerts, inventory), transactions: [newTx, ...state.transactions] };
       }),
       addProduct: (item) => set((state) => {
         let status: InventoryItem['status'] = 'In Stock';
@@ -211,6 +248,7 @@ export const useStore = create<AppState>()(
       })),
 
       alerts: mockAlerts,
+      transactions: mockTransactions,
 
       simulatorParams: {
         marketingSpend: 1000,
