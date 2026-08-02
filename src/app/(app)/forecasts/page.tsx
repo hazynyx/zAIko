@@ -47,40 +47,40 @@ export default function ForecastsPage() {
         </div>
       </div>
 
-      <BentoCard className="h-[500px] flex flex-col">
-        <div className="flex-1 w-full mt-4">
+      <BentoCard className="h-[500px]">
+        <div className="w-full h-[400px] mt-4">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={displayData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorPredicted" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="colorConfidence" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
+                  <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.05}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
               <XAxis 
                 dataKey="date" 
                 tickFormatter={(value) => new Date(value).toLocaleDateString([], { month: 'short', day: 'numeric' })} 
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--muted-foreground)"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
                 dy={10}
               />
               <YAxis 
-                stroke="hsl(var(--muted-foreground))" 
+                stroke="var(--muted-foreground)" 
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
                 dx={-10}
               />
               <Tooltip 
-                contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)', borderRadius: '8px' }}
+                labelFormatter={(value) => value ? new Date(value as string | number).toLocaleDateString() : ''}
               />
               <Legend verticalAlign="top" height={36}/>
               
@@ -96,7 +96,7 @@ export default function ForecastsPage() {
                 type="monotone" 
                 dataKey="lowerBound" 
                 stroke="none" 
-                fill="hsl(var(--background))" 
+                fill="var(--background)" 
                 name="Confidence Interval (Lower)"
                 // This area effectively "masks" the bottom part of the confidence interval
               />
@@ -104,7 +104,7 @@ export default function ForecastsPage() {
               <Area 
                 type="monotone" 
                 dataKey="predicted" 
-                stroke="hsl(var(--primary))" 
+                stroke="var(--primary)" 
                 strokeWidth={2}
                 fillOpacity={1} 
                 fill="url(#colorPredicted)" 
@@ -113,11 +113,11 @@ export default function ForecastsPage() {
               <Area 
                 type="monotone" 
                 dataKey="actual" 
-                stroke="hsl(var(--foreground))" 
+                stroke="var(--foreground)" 
                 strokeWidth={2}
                 fill="none" 
                 name="Historical Actuals"
-                dot={{ r: 3, fill: "hsl(var(--foreground))" }}
+                dot={{ r: 3, fill: "var(--foreground)" }}
                 activeDot={{ r: 5 }}
               />
             </AreaChart>

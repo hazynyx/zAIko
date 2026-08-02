@@ -7,12 +7,12 @@ import { useState, useEffect } from "react";
 export default function AnalyticsPage() {
   const [mounted, setMounted] = useState(false);
   const categoryData = [
-    { subject: 'Apparel', A: 120, B: 110, fullMark: 150 },
-    { subject: 'Footwear', A: 98, B: 130, fullMark: 150 },
-    { subject: 'Accessories', A: 86, B: 130, fullMark: 150 },
-    { subject: 'Equipment', A: 99, B: 100, fullMark: 150 },
-    { subject: 'Electronics', A: 85, B: 90, fullMark: 150 },
-    { subject: 'Home', A: 65, B: 85, fullMark: 150 },
+    { subject: 'Groceries', A: 140, B: 110, fullMark: 150 },
+    { subject: 'Snacks', A: 120, B: 130, fullMark: 150 },
+    { subject: 'Dairy', A: 145, B: 130, fullMark: 150 },
+    { subject: 'Household', A: 99, B: 100, fullMark: 150 },
+    { subject: 'Beverages', A: 85, B: 90, fullMark: 150 },
+    { subject: 'Personal Care', A: 65, B: 85, fullMark: 150 },
   ];
 
   const seasonalityData = [
@@ -73,7 +73,7 @@ export default function AnalyticsPage() {
                   cursor={{fill: 'var(--accent)'}}
                   contentStyle={{ borderRadius: '8px' }}
                 />
-                <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="sales" fill="var(--primary)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -87,8 +87,8 @@ export default function AnalyticsPage() {
                 <PolarGrid />
                 <PolarAngleAxis dataKey="subject" fontSize={12} />
                 <PolarRadiusAxis angle={30} domain={[0, 150]} tick={false} />
-                <Radar name="Actual" dataKey="A" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.5} />
-                <Radar name="Target" dataKey="B" stroke="hsl(var(--muted-foreground))" fill="hsl(var(--muted-foreground))" fillOpacity={0.3} />
+                <Radar name="Actual" dataKey="A" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.5} />
+                <Radar name="Target" dataKey="B" stroke="var(--muted-foreground)" fill="var(--muted-foreground)" fillOpacity={0.3} />
                 <Tooltip />
               </RadarChart>
             </ResponsiveContainer>

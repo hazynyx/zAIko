@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card"
 
-interface BentoCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface BentoCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   title?: React.ReactNode
   description?: React.ReactNode
   children: React.ReactNode
@@ -11,7 +11,7 @@ interface BentoCardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function BentoCard({ title, description, children, className, contentClassName, ...props }: BentoCardProps) {
   return (
-    <Card className={cn("overflow-hidden transition-all hover:shadow-md", className)} {...props}>
+    <Card className={cn("overflow-hidden transition-all hover:shadow-md animate-slide-up", className)} {...props}>
       {(title || description) && (
         <CardHeader className="p-4 pb-2">
           {title && <CardTitle className="text-lg font-medium">{title}</CardTitle>}

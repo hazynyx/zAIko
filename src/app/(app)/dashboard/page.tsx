@@ -54,7 +54,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {/* Total Inventory Value */}
         <BentoCard 
-          className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2 bg-primary text-primary-foreground border-none"
+          className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2 bg-primary text-primary-foreground border-none delay-100"
           contentClassName="h-full flex flex-col justify-center py-8"
         >
           <p className="text-primary-foreground/80 font-medium mb-2">Total Inventory Value</p>
@@ -81,7 +81,7 @@ export default function DashboardPage() {
         <BentoCard 
           title="Active Alerts" 
           description="System triggers & warnings"
-          className="col-span-1 lg:col-span-1 xl:col-span-1"
+          className="col-span-1 lg:col-span-1 xl:col-span-1 delay-200"
         >
           <div className="space-y-4">
             {alerts.slice(0, 3).map(alert => (
@@ -108,7 +108,7 @@ export default function DashboardPage() {
         <BentoCard 
           title="ML Forecast Accuracy" 
           description="Model confidence over last 7 days"
-          className="col-span-1 lg:col-span-1 xl:col-span-1 flex flex-col"
+          className="col-span-1 lg:col-span-1 xl:col-span-1 flex flex-col delay-300"
           contentClassName="flex-1 flex flex-col justify-end"
         >
           <div className="mb-4">
@@ -134,7 +134,7 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <BentoCard 
           title="Quick Actions" 
-          className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4"
+          className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 delay-400"
           contentClassName="flex flex-wrap gap-4"
         >
           <Button onClick={handleOptimize} className="gap-2">

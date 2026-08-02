@@ -16,19 +16,30 @@ export default function SimulatorPage() {
   // Generate simulated data by applying modifiers to the base predicted data
   const middleIndex = Math.floor(timeSeriesData.length / 2);
   const futureData = timeSeriesData.slice(middleIndex, middleIndex + 30).map(point => {
-    // Modifier logic:
-    // Marketing spend: +1 demand per $100
-    const marketingMod = (simulatorParams.marketingSpend / 100);
-    // Discount: +2 demand per 1%
-    const discountMod = (simulatorParams.discountPercent * 2);
-    // Weather: -1 demand per 1% negative impact
-    const weatherMod = -(simulatorParams.weatherImpact);
+    const dateObj = new Date(point.date);
+    const dayOfWeek = dateObj.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     
-    const totalModifier = marketingMod + discountMod + weatherMod;
+    // Weekend multiplier (people buy more groceries on weekends)
+    const baseWeekendSpike = isWeekend ? 1.3 : 1.0;
+    
+    // Marketing creates a multiplier effect (diminishing returns using log)
+    // e.g. 0 spend = 1.0, 5000 spend = ~1.37
+    const marketingMultiplier = 1 + (Math.log10(1 + simulatorParams.marketingSpend) / 10);
+    
+    // Discount elasticity (highly elastic on weekends for groceries)
+    // 0% = 1.0, 50% = 1.5 on weekdays, 2.0 on weekends
+    const discountMultiplier = 1 + (simulatorParams.discountPercent / 100) * (isWeekend ? 2 : 1);
+    
+    // Weather negatively impacts footfall
+    // 100% adverse weather = 66% drop in sales
+    const weatherMultiplier = 1 - (simulatorParams.weatherImpact / 150); 
+    
+    const combinedMultiplier = baseWeekendSpike * marketingMultiplier * discountMultiplier * weatherMultiplier;
     
     return {
       ...point,
-      simulated: Math.max(0, point.predicted + totalModifier),
+      simulated: Math.max(0, Math.round(point.predicted * combinedMultiplier)),
     };
   });
 
@@ -58,7 +69,7 @@ export default function SimulatorPage() {
                 min={0} 
                 max={5000} 
                 step={100}
-                onValueChange={(val) => updateSimulatorParam("marketingSpend", val[0])}
+                onValueChange={(val) => updateSimulatorParam("marketingSpend", Array.isArray(val) ? val[0] : val as any)}
               />
             </div>
             
@@ -72,7 +83,7 @@ export default function SimulatorPage() {
                 min={0} 
                 max={50} 
                 step={1}
-                onValueChange={(val) => updateSimulatorParam("discountPercent", val[0])}
+                onValueChange={(val) => updateSimulatorParam("discountPercent", Array.isArray(val) ? val[0] : val as any)}
               />
             </div>
 
@@ -86,49 +97,49 @@ export default function SimulatorPage() {
                 min={0} 
                 max={100} 
                 step={5}
-                onValueChange={(val) => updateSimulatorParam("weatherImpact", val[0])}
+                onValueChange={(val) => updateSimulatorParam("weatherImpact", Array.isArray(val) ? val[0] : val as any)}
               />
             </div>
           </div>
         </BentoCard>
 
-        <BentoCard className="col-span-1 lg:col-span-2 flex flex-col h-[500px]" title="Simulated Demand Curve">
-          <div className="flex-1 w-full mt-4">
+        <BentoCard className="col-span-1 lg:col-span-2" title="Simulated Demand Curve">
+          <div className="w-full h-[400px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={futureData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSimulated" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                 <XAxis 
                   dataKey="date" 
                   tickFormatter={(value) => new Date(value).toLocaleDateString([], { month: 'short', day: 'numeric' })} 
-                  stroke="hsl(var(--muted-foreground))"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                   dy={10}
                 />
                 <YAxis 
-                  stroke="hsl(var(--muted-foreground))" 
+                  stroke="var(--muted-foreground)" 
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                   dx={-10}
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                  contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)', borderRadius: '8px' }}
+                  labelFormatter={(value) => value ? new Date(value as string | number).toLocaleDateString() : ''}
                 />
                 <Legend verticalAlign="top" height={36}/>
 
                 <Area 
                   type="monotone" 
                   dataKey="predicted" 
-                  stroke="hsl(var(--muted-foreground))" 
+                  stroke="var(--muted-foreground)" 
                   strokeDasharray="5 5"
                   strokeWidth={2}
                   fill="none" 
@@ -138,7 +149,7 @@ export default function SimulatorPage() {
                 <Area 
                   type="monotone" 
                   dataKey="simulated" 
-                  stroke="hsl(var(--primary))" 
+                  stroke="var(--primary)" 
                   strokeWidth={2}
                   fillOpacity={1} 
                   fill="url(#colorSimulated)" 

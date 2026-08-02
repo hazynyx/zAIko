@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   Sidebar,
   SidebarContent,
@@ -41,8 +42,9 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xl font-bold tracking-tight text-primary mb-4 px-2 mt-4">
-            zAIko
+          <SidebarGroupLabel className="text-xl font-bold tracking-tight text-primary mb-4 px-2 mt-4 flex items-center justify-between w-full">
+            <span>zAIko</span>
+            <ThemeToggle />
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
