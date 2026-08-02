@@ -39,9 +39,16 @@ export default function DashboardPage() {
   const totalValue = inventory.reduce((acc, item) => acc + item.value, 0);
   const totalItems = inventory.reduce((acc, item) => acc + item.stock, 0);
   
-  // New Operational Metrics
-  const todaySales = 14250; 
-  const todayOrders = 112;
+  // New Operational Metrics (Dynamically Calculated)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const todaysSalesTransactions = transactions.filter(tx => 
+    tx.type === 'sale' && new Date(tx.timestamp) >= todayStart
+  );
+
+  const todaySales = todaysSalesTransactions.reduce((acc, tx) => acc + (tx.amount || 0), 0);
+  const todayOrders = todaysSalesTransactions.length;
   const salesTrend = 12.5;
 
   const healthyCount = inventory.filter(i => i.status === 'In Stock').length;
@@ -141,9 +148,14 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight">Command Center</h1>
           <p className="text-muted-foreground">Real-time pulse on sales, inventory health, and AI recommendations.</p>
         </div>
-        <Button onClick={() => setIsSaleDialogOpen(true)} className="gap-2 shrink-0">
-          <ShoppingCart className="h-4 w-4" /> Record Sale
-        </Button>
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="text-sm font-medium text-muted-foreground hidden sm:block">
+            {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </div>
+          <Button onClick={() => setIsSaleDialogOpen(true)} className="gap-2 shrink-0">
+            <ShoppingCart className="h-4 w-4" /> Record Sale
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
