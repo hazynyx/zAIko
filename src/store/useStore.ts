@@ -19,6 +19,7 @@ interface AppState {
   inventory: InventoryItem[];
   updateStock: (id: string, newStock: number) => void;
   updateProduct: (id: string, updates: Partial<InventoryItem>) => void;
+  recordSale: (id: string, quantity: number) => void;
   reorderProduct: (id: string, quantity: number) => void;
   receiveOrder: (id: string) => void;
   addProduct: (item: Omit<InventoryItem, 'id' | 'status' | 'value'>) => void;
@@ -114,6 +115,20 @@ export const useStore = create<AppState>()(
             
             updatedItem.value = updatedItem.price * updatedItem.stock;
             return updatedItem;
+          }
+          return item;
+        });
+        return { inventory, alerts: syncAlerts(state.alerts, inventory) };
+      }),
+      recordSale: (id, quantity) => set((state) => {
+        const inventory = state.inventory.map(item => {
+          if (item.id === id) {
+            const newStock = Math.max(0, item.stock - quantity);
+            let status = item.status;
+            if (newStock === 0) status = 'Out of Stock';
+            else if (newStock < 20) status = 'Low';
+            else status = 'In Stock';
+            return { ...item, stock: newStock, status, value: item.price * newStock };
           }
           return item;
         });

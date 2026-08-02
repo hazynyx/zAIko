@@ -28,6 +28,11 @@ export default function DashboardPage() {
   const [reorderItem, setReorderItem] = useState<{ id: string, name: string } | null>(null);
   const [reorderQuantity, setReorderQuantity] = useState("50");
   const reorderProductStore = useStore(state => state.reorderProduct);
+
+  const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
+  const [saleItemId, setSaleItemId] = useState("");
+  const [saleQuantity, setSaleQuantity] = useState("1");
+  const recordSaleStore = useStore(state => state.recordSale);
   
   // Existing Metrics
   const totalValue = inventory.reduce((acc, item) => acc + item.value, 0);
@@ -98,6 +103,30 @@ export default function DashboardPage() {
     setIsReorderDialogOpen(false);
   };
 
+  const handleRecordSale = () => {
+    if (!saleItemId) {
+      toast.error("Please select a product.");
+      return;
+    }
+    const quantity = parseInt(saleQuantity, 10);
+    if (isNaN(quantity) || quantity <= 0) {
+      toast.error("Please enter a valid quantity.");
+      return;
+    }
+    
+    const item = inventory.find(i => i.id === saleItemId);
+    if (item && quantity > item.stock) {
+      toast.error(`Cannot sell more than available stock (${item.stock} left).`);
+      return;
+    }
+
+    recordSaleStore(saleItemId, quantity);
+    toast.success(`Recorded sale of ${quantity} unit(s) for ${item?.name}`);
+    setIsSaleDialogOpen(false);
+    setSaleItemId("");
+    setSaleQuantity("1");
+  };
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -106,9 +135,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Command Center</h1>
-        <p className="text-muted-foreground">Real-time pulse on sales, inventory health, and AI recommendations.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Command Center</h1>
+          <p className="text-muted-foreground">Real-time pulse on sales, inventory health, and AI recommendations.</p>
+        </div>
+        <Button onClick={() => setIsSaleDialogOpen(true)} className="gap-2 shrink-0">
+          <ShoppingCart className="h-4 w-4" /> Record Sale
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -358,6 +392,49 @@ export default function DashboardPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsReorderDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleApplyReorder}>Place Order</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSaleDialogOpen} onOpenChange={setIsSaleDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Record Quick Sale</DialogTitle>
+            <DialogDescription>
+              Instantly record a sale directly from the dashboard to keep live inventory accurate.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="sale-item">Product</Label>
+              <select 
+                id="sale-item"
+                className="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                value={saleItemId}
+                onChange={(e) => setSaleItemId(e.target.value)}
+              >
+                <option value="" disabled>Select a product...</option>
+                {inventory.map(item => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} ({item.stock} left)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sale-qty">Quantity Sold</Label>
+              <Input
+                id="sale-qty"
+                type="number"
+                min="1"
+                value={saleQuantity}
+                onChange={(e) => setSaleQuantity(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSaleDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleRecordSale}>Record Sale</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
